@@ -34,12 +34,10 @@ Gnode = module.exports = {
     if (!match) return
 
     compressed = (req.headers['content-encoding'] == 'gzip')
-    sys.puts('    responding with rpc for ' + cmd)
+    resource   = match[1].replace(/^\//, '')
+    if (compressed) req.setBodyEncoding('binary')
+    sys.puts('    responding with ' + cmd + ' rpc for ' + resource)
 
-    if (compressed) {
-      sys.puts('    compressed request')
-      req.setBodyEncoding('binary')
-    }
     return function(res) {
       res.writeHead(200, {'Content-Type': 'application/x-git-' + cmd + '-result'})
 
@@ -71,7 +69,9 @@ Gnode = module.exports = {
     reqUrl = url.parse(req.url, true)
     match = /(.*?)\/info\/refs$/.exec(reqUrl.pathname)
     if (!match) return
-    sys.puts('    responding with info ref')
+
+    resource = match[1].replace(/^\//, '')
+    sys.puts('    responding with info ref for ' + resource)
 
     if (reqUrl.query && reqUrl.query.service) {
       service = reqUrl.query.service.replace('git-', '')
