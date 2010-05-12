@@ -10,6 +10,17 @@ var sys     = require('sys'),
   Buffer    = require('buffer').Buffer
 
 Gnode = module.exports = {
+  process: function(req, res) {
+    this.auth(function(authorized) {
+      if(authorized) {
+        action = Gnode.action(req)
+        action(res)
+      }
+      else
+        Gnode.respondNotAuthorized(res)
+    })
+  },
+
   action: function(req) {
     sys.puts('--- got req for ' + req.url)
     switch(req.method) {
@@ -134,6 +145,11 @@ Gnode = module.exports = {
     res.end('Not found')
   },
 
+  respondNotAuthorized: function(res) {
+    res.writeHead(403, {'Content-Type': 'text/plain'})
+    res.end('Not authorized')
+  },
+
   pktFlush: function() {
     return '0000'
   },
@@ -166,14 +182,18 @@ Gnode = module.exports = {
     return uncompressed
   },
 
+  authEverything: function(callback) {
+    callback(true)
+  },
+
   run: function(options) {
-    this.port  = parseInt(options.port || 8000)
-    this.root  = options.root || process.cwd()
-    this.git   = options.git || 'git'
+    this.port = parseInt(options.port || 8000)
+    this.root = options.root || process.cwd()
+    this.git  = options.git || 'git'
+    this.auth = options.auth || this.authEverything
 
     http.createServer(function (req, res) {
-      action = Gnode.action(req)
-      action(res)
+      Gnode.process(req, res)
     }).listen(this.port)
 
     sys.puts('Gnode running on http://0.0.0.0:' + this.port)
