@@ -41,7 +41,7 @@ Gnode = module.exports = {
     return function(res) {
       res.writeHead(200, {'Content-Type': 'application/x-git-' + cmd + '-result'})
 
-      git = spawn(Gnode.git, [cmd, '--stateless-rpc', Gnode.path])
+      git = spawn(Gnode.git, [cmd, '--stateless-rpc', Gnode.root])
       git.stdout.addListener('data', function(d) {
         res.write(d)
       })
@@ -80,7 +80,7 @@ Gnode = module.exports = {
         res.write(Gnode.pktWrite('# service=git-' + service + '\n'))
         res.write(Gnode.pktFlush())
 
-        git = spawn(Gnode.git, [service, '--stateless-rpc', '--advertise-refs', Gnode.path])
+        git = spawn(Gnode.git, [service, '--stateless-rpc', '--advertise-refs', Gnode.root])
         git.stdout.addListener('data', function(d) {
           res.write(d)
         })
@@ -98,7 +98,7 @@ Gnode = module.exports = {
   },
 
   sendFile: function(file, contentType) {
-    file = Gnode.path + file
+    file = Gnode.root + file
     sys.puts('    sendfile called for ' + file)
     path.exists(file, function(exists) {
       if (!exists)
@@ -167,9 +167,9 @@ Gnode = module.exports = {
   },
 
   run: function(options) {
-    this.port = parseInt(options.port || 8000)
-    this.path = options.path || process.cwd()
-    this.git  = options.git || 'git'
+    this.port  = parseInt(options.port || 8000)
+    this.root  = options.root || process.cwd()
+    this.git   = options.git || 'git'
 
     http.createServer(function (req, res) {
       action = Gnode.action(req)
@@ -177,7 +177,7 @@ Gnode = module.exports = {
     }).listen(this.port)
 
     sys.puts('Gnode running on http://0.0.0.0:' + this.port)
-    sys.puts('Serving ' + this.path)
+    sys.puts('Serving ' + this.root)
   }
 }
 
